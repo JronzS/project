@@ -3,106 +3,115 @@ import axios from "axios";
 import { useToast } from "vue-toastification";
 import router from "@/router/index";
 
+// Set Axios base URL globally
+axios.defaults.baseURL = "http://127.0.0.1:8000";
+
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     accessToken: null, // Store access token
-    user: null, // Store user data after registration or login
+    user: null, // Store user data
     error: null, // Store error message for failed actions
   }),
 
   actions: {
-    // Load token from localStorage (on app initialization)
+    // Load token from localStorage on app initialization
     loadTokenFromStorage() {
       const token = localStorage.getItem("accessToken");
       if (token) {
-        this.accessToken = token; // Set token in store if available in localStorage
+        this.accessToken = token;
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
     },
 
+    // Login Action
     async login(email, password) {
+      const toast = useToast();
       try {
-        // First, authenticate the user with the login credentials
+        // Send POST request to login endpoint
         const response = await axios.post("/api/login/", {
           email: email,
           password: password,
         });
 
-        this.accessToken = response.data.access; // Set token in store
-        console.log("Access Token:", this.accessToken);
+        // Save access token and user data
+        this.accessToken = response.data.access;
+        this.user = response.data.user;
 
-        // Save the token to localStorage for persistence
+        // Persist access token and user data to localStorage
         localStorage.setItem("accessToken", this.accessToken);
+        localStorage.setItem("user", JSON.stringify(this.user));
 
-        // Fetch the user details from /api/me/ using the access token
-        const userResponse = await axios.get("http://localhost:8000/api/me/", {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        });
+        // Set Authorization header for future requests
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${this.accessToken}`;
 
-        // Assuming the user response contains the user data with an 'id' field
-        const userId = userResponse.data.id;
-        this.user = userResponse.data; // Save the user data to the store
-        localStorage.setItem("userId", userId); // Save the user ID to localStorage
-
-        // Log the user ID for debugging
-        console.log("User ID:", userId);
-
-        return true; // Successful login
+        toast.success("Login successful!");
+        return true; // Indicate success
       } catch (error) {
-        console.error("Login failed:", error);
-        this.accessToken = null;
-        localStorage.removeItem("accessToken"); // Remove invalid token
-        localStorage.removeItem("userId"); // Remove user ID from localStorage in case of failure
-        return false; // Failed login
+        console.error("Login failed:", error.response?.data || error.message);
+        const errorMessage =
+          error.response?.data?.detail || "Invalid login credentials.";
+        toast.error(errorMessage);
+        return false; // Indicate failure
       }
     },
 
-    // Register action: sends a request to register the user
+    // Register Action
     async register(name, email, password, confirmPassword) {
-      const toast = useToast(); // Initialize the toast
+      const toast = useToast();
 
       // Check if passwords match
       if (password !== confirmPassword) {
         this.error = "Passwords do not match";
-        toast.error("Passwords do not match"); // Show error toast
+        toast.error(this.error); // Show error toast
         return false;
       }
 
       try {
-        // Send the POST request to the signup API
-        const response = await axios.post("http://127.0.0.1:8000/api/signup/", {
-          email,
-          name,
+        // Send POST request to signup endpoint
+        const response = await axios.post("/api/signup/", {
+          name: name,
+          email: email,
           password1: password,
-          password2: confirmPassword, // Ensure passwords match
+          password2: confirmPassword,
         });
 
+        // Handle successful registration
         if (response.data.message === "success") {
-          this.user = response.data.user; // Assuming user data is returned
-          toast.success("Registration successful!"); // Show success toast
+          this.user = response.data.user;
+          toast.success("Registration successful!");
           return true;
         } else {
-          this.error = response.data.errors || "An unknown error occurred";
-          toast.error(this.error); // Show error toast if registration fails
+          // Flatten and display backend error messages
+          this.error = response.data.errors || "An unknown error occurred.";
+          const errorMessages = Object.values(this.error).flat().join(", ");
+          toast.error(errorMessages);
           return false;
         }
       } catch (error) {
-        this.error = error.response?.data?.detail || error.message;
-        console.error("Registration error:", error);
-        toast.error(this.error); // Show error toast in case of network failure
+        // Extract backend errors or display a general network error
+        this.error = error.response?.data || {
+          detail: "Network error occurred.",
+        };
+        const errorMessages = Object.values(this.error).flat().join(", ");
+        console.error("Registration error:", errorMessages);
+        toast.error(errorMessages);
         return false;
       }
     },
 
-    // Logout action: clears both the store and localStorage
+    // Logout Action
     logout() {
       this.accessToken = null;
       this.user = null;
       this.error = null;
+
+      // Clear local storage and reset headers
       localStorage.removeItem("accessToken");
-      /*  localStorage.removeItem("Role");  */
-      localStorage.removeItem("hasVisitedDashboard");
+      localStorage.removeItem("user");
+      delete axios.defaults.headers.common["Authorization"];
+
       window.location.href = "/";
     },
 
