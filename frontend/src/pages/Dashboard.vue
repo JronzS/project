@@ -1,108 +1,151 @@
 <template>
-    <v-container>
-        <v-row>
-            <v-col cols="12" md="12" lg="12">
-                <h2 class="text-center my-4">USERS DATA / DASHBOARD</h2>
-                <!-- Display loading spinner when the data is being fetched -->
-                <v-spinner v-if="loading" color="primary" class="d-flex justify-center" />
+  <v-container fluid>
+    <v-row>
+      <v-col cols="12">
+        <h2
+          class="text-start my-4 bg-blue-grey-darken-4 text-white headers fonts arimo"
+        >
+          <span class="starts"> User Information Dashboard</span>
+        </h2>
 
-                <!-- Show data table only when the data is available -->
-                 
-                <v-data-table v-else-if="!loading && users.length > 0" :items="users" item-value="name"
-                    class="elevation-1">
-                    
-                    <!-- Manually define the table headers -->
-                    <template v-slot:column.id="{ column }">
-                        <span>ID</span>
-                    </template>
-                    <template v-slot:column.name="{ column }">
-                        <span>Name</span>
-                    </template>
-                    <template v-slot:column.email="{ column }">
-                        <span>Email</span>
-                    </template>
+        <!-- Loading Spinner -->
+        <v-spinner
+          v-if="loading"
+          color="primary"
+          class="d-flex justify-center"
+        />
 
-                    <!-- Default slot to render table rows -->
-                    <template v-slot:item="{ item }">
-                        <tr>
-                            <td>{{ item.id }}</td>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.email }}</td>
-                        </tr>
-                    </template>
-                </v-data-table>
+        <!-- Data Table -->
+        <v-container v-else-if="!loading && users.length > 0" class="bottoms">
+          <v-data-table :items="users" item-value="name" class="elevation-1">
+            <template v-slot:column.id><span>ID</span></template>
+            <template v-slot:column.name><span>Name</span></template>
+            <template v-slot:column.email><span>Email</span></template>
 
+            <!-- Table Rows -->
+            <template v-slot:item="{ item }">
+              <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.email }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-container>
 
-                <!-- Show a message when there are no users -->
-                <v-alert v-else-if="!loading && users.length === 0" type="info" class="mt-4">
-                    No users found.
-                </v-alert>
+        <!-- No Users -->
+        <v-alert
+          v-else-if="!loading && users.length === 0"
+          type="info"
+          class="mt-4"
+        >
+          No users found.
+        </v-alert>
 
-                <!-- Show error message if there's an error fetching users -->
-                <v-alert v-if="error" type="error" class="mt-4">
-                    Error fetching users: {{ error }}
-                </v-alert>
+        <!-- Error Message -->
+        <v-alert v-if="error" type="error" class="mt-4">
+          Error fetching users: {{ error }}
+        </v-alert>
+      </v-col>
+    </v-row>
 
-                <!-- Logout Button -->
-                
-            </v-col>
+    <!-- Bottom Drawer -->
+    <v-navigation-drawer v-model="drawer" bottom temporary>
+      <v-row class="d-flex flex-column" style="height: 100%">
+        <v-row justify="center" class="tops">
+          <router-link to="/chat" class="text-decoration-none">
+            <v-btn color="green" dark>Chat Page</v-btn>
+          </router-link>
         </v-row>
-        <v-row>
-            <v-col>
-                <v-btn @click="logout" color="red" class="mt-4">Logout</v-btn>
-                <router-link to="/chat"> <v-btn @click="ChatPage" color="green" class="mt-4 mx-2">Chat Page</v-btn></router-link>
-            </v-col>
-            
+
+        <v-row justify="center" class="downs">
+          <v-btn @click="logout" color="red" dark>Logout</v-btn>
         </v-row>
-    </v-container>
+      </v-row>
+    </v-navigation-drawer>
+
+    <!-- Hamburger Menu in Upper-Right -->
+    <v-btn @click="drawer = !drawer" color="blue" icon class="menu-btn">
+      <v-icon>mdi-menu</v-icon>
+    </v-btn>
+  </v-container>
 </template>
 
 <script>
 import axios from "axios";
-import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth"; // If you're using Pinia for store management
+import { useAuthStore } from "@/stores/auth";
 
 export default {
-    name: "Users",
-    data() {
-        return {
-            users: [], // The list of users
-            loading: true, // Loading state to show spinner until data is fetched
-            error: null, // Error message state
-
-        };
+  name: "Users",
+  data() {
+    return {
+      users: [],
+      loading: true,
+      error: null,
+      drawer: false, // State to toggle the drawer
+    };
+  },
+  mounted() {
+    this.fetchUsers();
+  },
+  methods: {
+    async fetchUsers() {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/users/", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
+        this.users = response.data.data.users;
+      } catch (error) {
+        this.error = error.message || "Something went wrong!";
+      } finally {
+        this.loading = false;
+      }
     },
-    mounted() {
-        this.fetchUsers();
+    logout() {
+      const authStore = useAuthStore();
+      authStore.logout();
     },
-    methods: {
-        async fetchUsers() {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/api/users/", {
-                    headers: {
-                        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`, // Using Bearer token authentication
-                    },
-                });
-                console.log("API response:", response); // For debugging
-                this.users = response.data.data.users; // Ensure the correct path to users data
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                this.error = error.message || "Something went wrong!"; // Set error message if request fails
-            } finally {
-                this.loading = false; // Set loading to false after the request is done
-            }
-        },
-
-        // Logout method
-        logout() {
-            const authStore = useAuthStore();
-            authStore.logout(); // Clear the auth token in Pinia store
-        }
-    }
+  },
 };
 </script>
 
-
 <style scoped>
-/* Add any custom styles here */
+.menu-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+.headers {
+  position: relative;
+  top: -35px;
+  width: 110%;
+  margin-left: -20px;
+  padding: 20px;
+}
+.fonts {
+  font-size: xx-large;
+  font-weight: 900;
+}
+.arimo {
+  font-family: "Arimo", serif;
+  font-optical-sizing: auto;
+  font-weight: 692;
+  font-style: italic;
+}
+.tops {
+  margin-top: 250px;
+}
+.downs {
+  margin-top: -150px;
+}
+.bottoms {
+  position: relative;
+  margin-top: -20px;
+}
+.starts {
+  margin-left: 160px;
+}
 </style>
