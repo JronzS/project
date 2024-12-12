@@ -2,8 +2,10 @@
   <v-container fluid>
     <v-row>
       <v-col cols="12" md="12" lg="12">
-        <h2 class="text-center my-4 bg-grey text-black headers fonts">
-          USERS DATA / DASHBOARD
+        <h2
+          class="text-center my-4 bg-blue-grey-darken-4 text-white headers fonts arimo"
+        >
+          User Information Dashboard
         </h2>
         <!-- Display loading spinner when the data is being fetched -->
         <v-spinner
@@ -122,5 +124,12 @@ export default {
 .fonts {
   font-size: xx-large;
   font-weight: 900;
+}
+
+.arimo {
+  font-family: "Arimo", serif;
+  font-optical-sizing: auto;
+  font-weight: 692;
+  font-style: italic;
 }
 </style>
