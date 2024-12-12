@@ -1,5 +1,5 @@
 <template>
-  <v-container maxWidth="60%">
+  <v-container maxWidth="30%">
     <v-row>
       <v-col cols="12" lg="8"> </v-col>
       <v-col cols="12">
