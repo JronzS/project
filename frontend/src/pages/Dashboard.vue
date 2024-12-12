@@ -3,9 +3,9 @@
     <v-row>
       <v-col cols="12">
         <h2
-          class="text-center my-4 bg-blue-grey-darken-4 text-white headers fonts arimo"
+          class="text-start my-4 bg-blue-grey-darken-4 text-white headers fonts arimo"
         >
-          User Information Dashboard
+          <span class="starts"> User Information Dashboard</span>
         </h2>
 
         <!-- Loading Spinner -->
@@ -16,7 +16,7 @@
         />
 
         <!-- Data Table -->
-        <v-container v-else-if="!loading && users.length > 0">
+        <v-container v-else-if="!loading && users.length > 0" class="bottoms">
           <v-data-table :items="users" item-value="name" class="elevation-1">
             <template v-slot:column.id><span>ID</span></template>
             <template v-slot:column.name><span>Name</span></template>
@@ -140,5 +140,12 @@ export default {
 }
 .downs {
   margin-top: -150px;
+}
+.bottoms {
+  position: relative;
+  margin-top: -20px;
+}
+.starts {
+  margin-left: 160px;
 }
 </style>
