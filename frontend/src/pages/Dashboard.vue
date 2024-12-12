@@ -1,34 +1,28 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" md="12" lg="12">
+      <v-col cols="12">
         <h2
           class="text-center my-4 bg-blue-grey-darken-4 text-white headers fonts arimo"
         >
           User Information Dashboard
         </h2>
-        <!-- Display loading spinner when the data is being fetched -->
+
+        <!-- Loading Spinner -->
         <v-spinner
           v-if="loading"
           color="primary"
           class="d-flex justify-center"
         />
 
-        <!-- Show data table only when the data is available -->
+        <!-- Data Table -->
         <v-container v-else-if="!loading && users.length > 0">
           <v-data-table :items="users" item-value="name" class="elevation-1">
-            <!-- Manually define the table headers -->
-            <template v-slot:column.id="{ column }">
-              <span>ID</span>
-            </template>
-            <template v-slot:column.name="{ column }">
-              <span>Name</span>
-            </template>
-            <template v-slot:column.email="{ column }">
-              <span>Email</span>
-            </template>
+            <template v-slot:column.id><span>ID</span></template>
+            <template v-slot:column.name><span>Name</span></template>
+            <template v-slot:column.email><span>Email</span></template>
 
-            <!-- Default slot to render table rows -->
+            <!-- Table Rows -->
             <template v-slot:item="{ item }">
               <tr>
                 <td>{{ item.id }}</td>
@@ -39,7 +33,7 @@
           </v-data-table>
         </v-container>
 
-        <!-- Show a message when there are no users -->
+        <!-- No Users -->
         <v-alert
           v-else-if="!loading && users.length === 0"
           type="info"
@@ -48,39 +42,47 @@
           No users found.
         </v-alert>
 
-        <!-- Show error message if there's an error fetching users -->
+        <!-- Error Message -->
         <v-alert v-if="error" type="error" class="mt-4">
           Error fetching users: {{ error }}
         </v-alert>
+      </v-col>
+    </v-row>
 
-        <!-- Logout Button -->
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col>
-        <v-btn @click="logout" color="red" class="mt-4">Logout</v-btn>
-        <router-link to="/chat">
-          <v-btn @click="ChatPage" color="green" class="mt-4 mx-2"
-            >Chat Page</v-btn
-          ></router-link
-        >
-      </v-col>
-    </v-row>
+    <!-- Bottom Drawer -->
+    <v-navigation-drawer v-model="drawer" bottom temporary>
+      <v-row class="d-flex flex-column" style="height: 100%">
+        <v-row justify="center" class="tops">
+          <router-link to="/chat" class="text-decoration-none">
+            <v-btn color="green" dark>Chat Page</v-btn>
+          </router-link>
+        </v-row>
+
+        <v-row justify="center" class="downs">
+          <v-btn @click="logout" color="red" dark>Logout</v-btn>
+        </v-row>
+      </v-row>
+    </v-navigation-drawer>
+
+    <!-- Hamburger Menu in Upper-Right -->
+    <v-btn @click="drawer = !drawer" color="blue" icon class="menu-btn">
+      <v-icon>mdi-menu</v-icon>
+    </v-btn>
   </v-container>
 </template>
 
 <script>
 import axios from "axios";
-import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth"; // If you're using Pinia for store management
+import { useAuthStore } from "@/stores/auth";
 
 export default {
   name: "Users",
   data() {
     return {
-      users: [], // The list of users
-      loading: true, // Loading state to show spinner until data is fetched
-      error: null, // Error message state
+      users: [],
+      loading: true,
+      error: null,
+      drawer: false, // State to toggle the drawer
     };
   },
   mounted() {
@@ -91,29 +93,31 @@ export default {
       try {
         const response = await axios.get("http://127.0.0.1:8000/api/users/", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Using Bearer token authentication
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
-        console.log("API response:", response); // For debugging
-        this.users = response.data.data.users; // Ensure the correct path to users data
+        this.users = response.data.data.users;
       } catch (error) {
-        console.error("Error fetching users:", error);
-        this.error = error.message || "Something went wrong!"; // Set error message if request fails
+        this.error = error.message || "Something went wrong!";
       } finally {
-        this.loading = false; // Set loading to false after the request is done
+        this.loading = false;
       }
     },
-
-    // Logout method
     logout() {
       const authStore = useAuthStore();
-      authStore.logout(); // Clear the auth token in Pinia store
+      authStore.logout();
     },
   },
 };
 </script>
 
 <style scoped>
+.menu-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
 .headers {
   position: relative;
   top: -35px;
@@ -125,11 +129,16 @@ export default {
   font-size: xx-large;
   font-weight: 900;
 }
-
 .arimo {
   font-family: "Arimo", serif;
   font-optical-sizing: auto;
   font-weight: 692;
   font-style: italic;
+}
+.tops {
+  margin-top: 250px;
+}
+.downs {
+  margin-top: -150px;
 }
 </style>
