@@ -1,24 +1,25 @@
 <template>
-  <v-container>
+  <v-container maxWidth="60%">
     <v-row>
-      <v-col cols="12" lg="8">
-
-      </v-col>
-      <v-col cols="12"  lg="4">
-        <br> <br> <br> <br>
+      <v-col cols="12" lg="8"> </v-col>
+      <v-col cols="12">
+        <br />
+        <br />
+        <br />
+        <br />
         <login-form>
-      <template #header>
-       
-        <h2 class="text-center mt-5">Welcome Back</h2>
-      </template>
-      <template #footer>
-        <v-btn text @click="switchToRegister">Don't have an account? Register</v-btn>
-      </template>
-    </login-form>
+          <template #header>
+            <h2 class="text-center mt-5">Welcome Back</h2>
+          </template>
+          <template #footer>
+            <v-btn text @click="switchToRegister"
+              >Don't have an account? Register</v-btn
+            >
+          </template>
+        </login-form>
       </v-col>
     </v-row>
-   
-    
+
     <v-dialog v-model="showRegister" persistent max-width="400px">
       <register-form v-model="showRegister">
         <template #header>
