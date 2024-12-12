@@ -9,11 +9,11 @@
         <br />
         <login-form>
           <template #header>
-            <h2 class="text-center mt-5">Welcome Back</h2>
+            <h2 class="text-center mt-5">Hello There!</h2>
           </template>
           <template #footer>
-            <v-btn text @click="switchToRegister"
-              >Don't have an account? Register</v-btn
+            <v-btn text @click="switchToRegister" class="pt-3 text-wrap"
+              >Register Here</v-btn
             >
           </template>
         </login-form>
