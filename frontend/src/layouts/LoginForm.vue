@@ -21,7 +21,7 @@
         ></v-text-field>
         <v-btn type="submit" color="primary" class="mt-4" block>Login</v-btn>
       </v-form>
-      <slot name="footer"></slot>
+      <slot name="footer" c></slot>
     </v-card>
   </v-container>
 </template>
